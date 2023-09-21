@@ -169,7 +169,7 @@ def main():
         print(f"Generation: {i}, best fitness: {f_max}")
         population, f = ea.step(population, f)
         populations.append(population)
-        if f.max() < f_best[-1]:
+        if f.max() > f_best[-1]:
             f_best.append(f.max())
         else:
             f_best.append(f_best[-1])
