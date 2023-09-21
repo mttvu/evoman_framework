@@ -38,3 +38,6 @@ gen best mean std
 
 gen best mean std
 29 92.202264 83.036558 14.710011
+
+gen best mean std
+29 92.202264 83.036558 14.710011
