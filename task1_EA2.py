@@ -39,28 +39,98 @@ class EA(object):
         x_parents = np.zeros((parents_size, self.gene_length), np.float64)
         f_parents = np.zeros(parents_size)
 
+        duplicates = []
+
         # tournament selection
         for i in range(parents_size):
-            # select tournament_size random individuals
-            candidates = np.random.choice(self.pop_size, int(self.pop_size * self.tournament_size), replace=False)
-            # choose the best individual among them as parent
-            winner = np.argmax(f_old[candidates])
-            x_parents[i] = x_old[candidates[winner]]
-            f_parents[i] = f_old[candidates[winner]]
+            check = False
+            while check == False:
+                # select tournament_size random individuals
+                candidates = np.random.choice(self.pop_size, int(self.pop_size * self.tournament_size), replace=False)
+
+                # choose the best individual among them as parent
+                winner = np.argmax(f_old[candidates])
+                # make sure we haven't selected this individual before
+                
+                if candidates[winner] not in duplicates:
+                    check = True
+                    duplicates.append(candidates[winner])
+                    
+                    x_parents[i] = x_old[candidates[winner]]
+                    f_parents[i] = f_old[candidates[winner]]
 
         return x_parents, f_parents
 
-    def recombination(self, x_parents, f_parents):
+    def recombination_chance(self, x_parents, f_parens):
         x_children = []
         parent_size = len(x_parents)
+
         # Uniform crossover
         for i in range(parent_size):
             # select two parents at random
             parents_idx = np.random.choice(parent_size, 2, replace=False)
             parent1 = x_parents[parents_idx[0]]
             parent2 = x_parents[parents_idx[1]]
+
+            # create children with interchanging genes from the parents
+            child = np.zeros_like(parent1)
+            child2 = np.zeros_like(parent1)
+            
+            for i in range(len(parent1)):
+                if np.random.uniform() > 0.5:
+                    child[i] = parent1[i]
+                    child2[i] = parent2[i]
+                else:
+                    child[i] = parent2[i]
+                    child2[i] = parent1[i]
+
+            x_children.append(child)
+            x_children.append(child2)
+
+        return np.array(x_children)
+
+    def recombination_switch(self, x_parents, f_parents):
+        x_children = []
+        parent_size = len(x_parents)
+        
+        # Uniform crossover
+        for i in range(parent_size):
+            # select two parents at random
+            parents_idx = np.random.choice(parent_size, 2, replace=False)
+            parent1 = x_parents[parents_idx[0]]
+            parent2 = x_parents[parents_idx[1]]
+
+            # create children with interchanging genes from the parents
+            child = np.zeros_like(parent1)
+            child2 = np.zeros_like(parent1)
+            
+            for i in range(len(parent1)):
+                if i % 2 == 0:
+                    child[i] = parent1[i]
+                    child2[i] = parent2[i]
+                else:
+                    child[i] = parent2[i]
+                    child2[i] = parent1[i]
+
+            x_children.append(child)
+            x_children.append(child2)
+
+        return np.array(x_children)
+    
+    def recombination(self, x_parents, f_parents):
+        x_children = []
+        parent_size = len(x_parents)
+        
+        # Uniform crossover
+        for i in range(parent_size):
+            # select two parents at random
+            parents_idx = np.random.choice(parent_size, 2, replace=False)
+            parent1 = x_parents[parents_idx[0]]
+            parent2 = x_parents[parents_idx[1]]
+
             # generate a random binary mask for crossover
             mask = np.random.randint(0, 2, len(parent1)).astype(bool)
+            
             # create a child with the first part from parent1 and the second part from parent2
             child = np.zeros_like(parent1)
             child[mask] = parent1[mask]
@@ -70,6 +140,7 @@ class EA(object):
             child2 = np.zeros_like(parent1)
             child2[~mask] = parent1[~mask]
             child2[mask] = parent2[mask]
+
             x_children.append(child)
             x_children.append(child2)
 
@@ -87,6 +158,52 @@ class EA(object):
                     
         return x_children
 
+    def survivor_selection_half(self, x_old, x_children, f_old, f_children):
+        x_new = np.empty_like(x_old)
+        f_new = np.empty_like(f_old)
+
+        duplicates = []
+        parent_size = int(self.pop_size / 4)
+        child_size = int(parent_size * 3)
+
+        for i in range(parent_size):
+            check = False
+            while check == False:
+                # select tournament_size random individuals
+                candidates = np.random.choice(len(x_old), int(len(x_old) * self.tournament_size), replace=False)
+                
+                # add best to survivors
+                best = candidates[np.argmax(f_old[candidates])]
+
+                # make sure we haven't selected these survivors before
+                if best not in duplicates:
+                    check = True
+                    duplicates.append(best)
+
+                    x_new[i] = x_old[best]
+                    f_new[i] = f_old[best]
+
+        duplicates = []
+        for i in range(child_size):
+            check = False
+            while check == False:
+                # select tournament_size random individuals
+                candidates = np.random.choice(len(x_children), int(len(x_children) * self.tournament_size), replace=False)
+                
+                # add best to survivors
+                best = candidates[np.argmax(f_children[candidates])]
+
+                # make sure we haven't selected these survivors before
+                if best not in duplicates:
+                    check = True
+                    duplicates.append(best)
+
+                    x_new[i + parent_size] = x_children[best]
+                    f_new[i + parent_size] = f_children[best]
+        
+        return x_new, f_new
+
+
     def survivor_selection(self, x_old, x_children, f_old, f_children):
         n_children = len(x_children)
 
@@ -96,14 +213,25 @@ class EA(object):
         x_new = np.empty_like(x_old)
         f_new = np.empty_like(f_old)
 
+        duplicates = []
+
         # tournament selection
         for i in range(self.pop_size):
-            # select tournament_size random individuals
-            candidates = np.random.choice(self.pop_size + n_children, int(self.pop_size * self.tournament_size), replace=False)
-            # add best to survivors
-            best = candidates[np.argmax(f_combined[candidates])]
-            x_new[i] = x_combined[best]
-            f_new[i] = f_combined[best]
+            check = False
+            while check == False:
+                # select tournament_size random individuals
+                candidates = np.random.choice(self.pop_size + n_children, int(self.pop_size * self.tournament_size), replace=False)
+                
+                # add best to survivors
+                best = candidates[np.argmax(f_combined[candidates])]
+
+                # make sure we haven't selected these survivors before
+                if best not in duplicates:
+                    check = True
+                    duplicates.append(best)
+
+                    x_new[i] = x_combined[best]
+                    f_new[i] = f_combined[best]
 
         return x_new, f_new
 
@@ -112,12 +240,14 @@ class EA(object):
 
     def step(self, x_old, f_old):
         x_parents, f_parents = self.parent_selection(x_old, f_old)
-        x_children = self.recombination(x_parents, f_parents)
+        x_children = self.recombination_chance(x_parents, f_parents)
         x_children = self.mutation(x_children)
         f_children = self.evaluate(x_children)
 
+        # x, f = self.survivor_selection_half(x_old, x_children, f_old, f_children)
         x, f = self.survivor_selection(x_old, x_children, f_old, f_children)
 
+        # return x_children, f_children
         return x, f
 
 def main():
@@ -149,10 +279,10 @@ def main():
     # start writing your own code from here
     bounds_max = 1
     bounds_min = -1
-    population_size = 30
+    population_size = 100
     num_generations = 30
     mutation_prob = 0.2
-    tournament_size = 0.3
+    tournament_size = 0.05
     population = np.random.uniform(bounds_min, bounds_max, (population_size, gene_length))
 
     objective = Objective()
