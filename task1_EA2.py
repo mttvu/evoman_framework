@@ -36,17 +36,19 @@ class EA(object):
     def parent_selection(self, x_old, f_old):
         # half of the population will be selected
         parents_size = int(self.pop_size / 2)
-        x_parents = np.zeros((parents_size, self.gene_length), np.float64)
+        x_parents = np.zeros((parents_size, self.gene_length))
         f_parents = np.zeros(parents_size)
 
+        population_indices = np.arange(self.pop_size)
         # tournament selection
         for i in range(parents_size):
             # select tournament_size random individuals
-            candidates = np.random.choice(self.pop_size, int(self.pop_size * self.tournament_size), replace=False)
+            candidates = np.random.choice(population_indices, int(self.pop_size * self.tournament_size), replace=False)
             # choose the best individual among them as parent
             winner = np.argmax(f_old[candidates])
             x_parents[i] = x_old[candidates[winner]]
             f_parents[i] = f_old[candidates[winner]]
+            np.remove(population_indices, candidates[winner])
 
         return x_parents, f_parents
 
@@ -156,7 +158,7 @@ def main():
     population = np.random.uniform(bounds_min, bounds_max, (population_size, gene_length))
 
     objective = Objective()
-    ea = EA(objective, env, population_size,tournament_size,mutation_prob, gene_length, bounds_min, bounds_max)
+    ea = EA(objective, env, population_size, tournament_size, mutation_prob, gene_length, bounds_min, bounds_max)
     f = ea.evaluate(population)
 
     populations = []
