@@ -48,7 +48,7 @@ class EA(object):
             winner = np.argmax(f_old[candidates])
             x_parents[i] = x_old[candidates[winner]]
             f_parents[i] = f_old[candidates[winner]]
-            np.remove(population_indices, candidates[winner])
+            population_indices = np.delete(population_indices, np.where(population_indices == candidates[winner]))
 
         return x_parents, f_parents
 
