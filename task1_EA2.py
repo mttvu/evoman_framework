@@ -34,20 +34,28 @@ class EA(object):
 
 
     def parent_selection(self, x_old, f_old):
-        # half of the population will be selected
+        # half of the population will be selected (can be a parameter)
         parents_size = int(self.pop_size / 2)
         x_parents = np.zeros((parents_size, self.gene_length), np.float64)
         f_parents = np.zeros(parents_size)
 
-        # tournament selection
-        for i in range(parents_size):
-            # select tournament_size random individuals
-            candidates = np.random.choice(self.pop_size, int(self.pop_size * self.tournament_size), replace=False)
-            # choose the best individual among them as parent
-            winner = np.argmax(f_old[candidates])
-            x_parents[i] = x_old[candidates[winner]]
-            f_parents[i] = f_old[candidates[winner]]
+        # stochastic universal sampling (SUS) algorithm (chapter 5.2.3 of the book)
+        current_member = 0
+        i = 0
+        r = np.random.uniform(low=0, high=(1/(self.pop_size / 2)))
 
+        # calculate cumulative probability distribution a
+        total_fitness = np.sum(f_old)
+        relative_fitness = f_old / total_fitness
+        a = np.cumsum(relative_fitness)
+
+        while (current_member < parents_size):
+            while (r <= a[i]):
+                x_parents[current_member] = x_old[i]
+                r = r + 1/parents_size
+                current_member = current_member + 1
+
+            i = i + 1
         return x_parents, f_parents
 
     def recombination(self, x_parents, f_parents):
