@@ -116,9 +116,9 @@ class EA(object):
         x_children = self.mutation(x_children)
         f_children = self.evaluate(x_children)
 
-        x, f = self.survivor_selection(x_old, x_children, f_old, f_children)
+        # only the children are selected to move on to the next generation
 
-        return x, f
+        return x_children, f_children
 
 def main():
     # choose this for not using visuals and thus making experiments faster
