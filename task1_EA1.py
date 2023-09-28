@@ -7,6 +7,7 @@
 
 # imports framework
 import sys
+import matplotlib.pyplot as plt
 
 from evoman.environment import Environment
 from demo_controller import player_controller
@@ -154,7 +155,7 @@ def main():
     bounds_max = 1
     bounds_min = -1
     population_size = 30
-    num_generations = 30
+    num_generations = 50
     mutation_prob = 0.2
     tournament_size = 0.3
     population = np.random.uniform(bounds_min, bounds_max, (population_size, gene_length))
@@ -168,19 +169,28 @@ def main():
     populations.append(population)
     fitness.append(f)
     f_best = [f.max()]
+    
+    best_f = []
+    std_f = []
+    mean_f = []
     best_f_idx = 0
 
     file_aux = open(experiment_name+'/results.txt','a')
     file_aux.write('\n\ngen best')
 
     for i in range(num_generations):
-        max_idx = np.argmax(f)
-        f_max = f[max_idx]
-        print(f"Generation: {i + 1}, best fitness: {f_max}")
+        best = f[np.argmax(f)]
+        std = np.std(f)
+        mean = np.mean(f)
+        
+        best_f.append(best)
+        std_f.append(std)
+        mean_f.append(mean)
+        print(f"Generation: {i + 1}, best fitness: {best}, std: {std}, mean: {mean}")
         
         # save the population and the best result
         file_aux  = open(experiment_name+'/results.txt','a')
-        file_aux.write('\n'+str(i + 1)+' '+str(round(f_max,6)) )
+        file_aux.write('\n'+str(i + 1)+' '+str(round(best,6))+' '+str(round(mean,6))+' '+str(round(std,6)))
         file_aux.close()
 
         # saves generation number
@@ -201,6 +211,12 @@ def main():
         else:
             f_best.append(f_best[-1])
     print("FINISHED!")
+
+    plt.plot(best_f)
+    plt.plot(std_f)
+    plt.plot(mean_f)
+    plt.legend(["best", "std", "mean"])
+    plt.show()
 
 if __name__ == '__main__':
     main()
