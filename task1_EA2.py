@@ -130,7 +130,7 @@ def main():
     if headless:
         os.environ["SDL_VIDEODRIVER"] = "dummy"
 
-    experiment_name = 'optimization_test'
+    experiment_name = 'EA2'
     if not os.path.exists(experiment_name):
         os.makedirs(experiment_name)
 
@@ -154,7 +154,7 @@ def main():
     bounds_max = 1
     bounds_min = -1
     population_size = 30
-    num_generations = 30
+    num_generations = 50
     mutation_prob = 0.2
     tournament_size = 0.3
     population = np.random.uniform(bounds_min, bounds_max, (population_size, gene_length))
@@ -164,17 +164,40 @@ def main():
     f = ea.evaluate(population)
 
     populations = []
+    fitness = []
     populations.append(population)
+    fitness.append(f)
     f_best = [f.max()]
+    best_f_idx = 0
+
+    file_aux = open(experiment_name+'/results.txt','a')
+    file_aux.write('\n\ngen best')
 
     for i in range(num_generations):
         max_idx = np.argmax(f)
         f_max = f[max_idx]
         print(f"Generation: {i + 1}, best fitness: {f_max}")
+        
+        # save the population and the best result
+        file_aux  = open(experiment_name+'/results.txt','a')
+        file_aux.write('\n'+str(i + 1)+' '+str(round(f_max,6)) )
+        file_aux.close()
+
+        # saves generation number
+        file_aux  = open(experiment_name+'/gen.txt','w')
+        file_aux.write(str(i + 1))
+        file_aux.close()
+
+        # saves file with the best solution
+        np.savetxt(experiment_name+'/best.txt', populations[best_f_idx])
+
         population, f = ea.step(population, f)
         populations.append(population)
+        fitness.append(f)
+
         if f.max() > f_best[-1]:
             f_best.append(f.max())
+            best_f_idx = i
         else:
             f_best.append(f_best[-1])
     print("FINISHED!")
