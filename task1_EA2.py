@@ -44,7 +44,7 @@ class EA(object):
         # tournament selection
         for i in range(parents_size):
             # select tournament_size random individuals
-            candidates = np.random.choice(population_indices, int(self.pop_size * self.tournament_size), replace=False)
+            candidates = np.random.choice(population_indices, int(self.tournament_size), replace=False)
             # choose the best individual among them as parent
             best = candidates[np.argmax(f_old[candidates])]
             x_parents[i] = x_old[best]
@@ -103,7 +103,7 @@ class EA(object):
         # tournament selection
         for i in range(self.pop_size):
             # select tournament_size random individuals
-            candidates = np.random.choice(population_indices, int(self.pop_size * self.tournament_size), replace=False)
+            candidates = np.random.choice(population_indices, int(self.tournament_size), replace=False)
             # add best to survivors
             best = candidates[np.argmax(f_combined[candidates])]
             x_new[i] = x_combined[best]
@@ -125,7 +125,7 @@ class EA(object):
 
         return x_children, f_children
 
-def main():
+def run_EA(population_size,num_generations,mutation_prob,tournament_size):
     # choose this for not using visuals and thus making experiments faster
     headless = True
     if headless:
@@ -154,10 +154,10 @@ def main():
     # start writing your own code from here
     bounds_max = 1
     bounds_min = -1
-    population_size = 30
-    num_generations = 50
-    mutation_prob = 0.2
-    tournament_size = 0.3
+    # population_size = 30
+    # num_generations = 50
+    # mutation_prob = 0.2
+    # tournament_size = 0.3
     population = np.random.uniform(bounds_min, bounds_max, (population_size, gene_length))
 
     objective = Objective()
@@ -219,4 +219,8 @@ def main():
     plt.show()
 
 if __name__ == '__main__':
-    main()
+    population_size = 30
+    num_generations = 50
+    mutation_prob = 0.2
+    tournament_size = 0.3
+    run_EA(population_size,num_generations,mutation_prob,tournament_size)

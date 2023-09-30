@@ -44,7 +44,7 @@ class EA(object):
         # tournament selection
         for i in range(parents_size):
             # select tournament_size random individuals
-            candidates = np.random.choice(population_indices, int(self.pop_size * self.tournament_size), replace=False)
+            candidates = np.random.choice(population_indices, int(self.tournament_size), replace=False)
             # choose the best individual among them as parent
             best = candidates[np.argmax(f_old[candidates])]
             x_parents[i] = x_old[best]
@@ -103,7 +103,7 @@ class EA(object):
         # tournament selection
         for i in range(self.pop_size):
             # select tournament_size random individuals
-            candidates = np.random.choice(population_indices, int(self.pop_size * self.tournament_size), replace=False)
+            candidates = np.random.choice(population_indices, int(self.tournament_size), replace=False)
             # add best to survivors
             best = candidates[np.argmax(f_combined[candidates])]
             x_new[i] = x_combined[best]
@@ -125,7 +125,7 @@ class EA(object):
 
         return x, f
 
-def main():
+def run_EA(population_size,num_generations,mutation_prob,tournament_size):
     # choose this for not using visuals and thus making experiments faster
     headless = True
     if headless:
@@ -139,7 +139,7 @@ def main():
 
     # initializes simulation in individual evolution mode, for single static enemy.
     env = Environment(experiment_name=experiment_name,
-                    enemies=[2],
+                    enemies=[3],
                     playermode="ai",
                     player_controller=player_controller(n_hidden_neurons), # you  can insert your own controller here
                     enemymode="static",
@@ -154,10 +154,10 @@ def main():
     # start writing your own code from here
     bounds_max = 1
     bounds_min = -1
-    population_size = 30
-    num_generations = 50
-    mutation_prob = 0.2
-    tournament_size = 0.3
+    # population_size = 30
+    # num_generations = 50
+    # mutation_prob = 0.2
+    # tournament_size = 0.3
     population = np.random.uniform(bounds_min, bounds_max, (population_size, gene_length))
 
     objective = Objective()
@@ -186,7 +186,7 @@ def main():
         best_f.append(best)
         std_f.append(std)
         mean_f.append(mean)
-        print(f"Generation: {i + 1}, best fitness: {best}, std: {std}, mean: {mean}")
+        # print(f"Generation: {i + 1}, best fitness: {best}, std: {std}, mean: {mean}")
         
         # save the population and the best result
         file_aux  = open(experiment_name+'/results.txt','a')
@@ -210,13 +210,52 @@ def main():
             best_f_idx = i
         else:
             f_best.append(f_best[-1])
-    print("FINISHED!")
+    # print("FINISHED!")
 
     plt.plot(best_f)
     plt.plot(std_f)
     plt.plot(mean_f)
     plt.legend(["best", "std", "mean"])
     plt.show()
+    return f_best[-1]
 
+def grid_search():
+    param_grid = {
+    'population_size': [30, 50, 100],
+    'mutation_prob': [0.01, 0.1, 0.2, 0.3],
+    'num_generations': [30, 50, 100],
+    'tournament_size': [3, 5, 10],
+    }
+    total_combinations = len(param_grid['population_size']) * len(param_grid['mutation_prob']) * len(param_grid['num_generations']) * len(param_grid['tournament_size'])
+    current_combination = 0
+    results = {}
+    for population_size in param_grid['population_size']:
+        for mutation_prob in param_grid['mutation_prob']:
+            for num_generations in param_grid['num_generations']:
+                for tournament_size in param_grid['tournament_size']:
+                    current_combination += 1
+                    print(f"Progress: {current_combination}/{total_combinations}")
+                    print("Parameters:")
+                    print("Population Size:", population_size)
+                    print("num_generations:", num_generations)
+                    print("mutation_prob:", mutation_prob)
+                    print("tournament_size:", tournament_size)
+                    fitness = run_EA(population_size,num_generations,mutation_prob,tournament_size)
+                    
+                    results[(population_size,num_generations,mutation_prob,tournament_size)] = fitness
+                    
+                    print("fitness:", fitness)
+
+    return results
 if __name__ == '__main__':
-    main()
+    population_size = 30
+    num_generations = 50
+    mutation_prob = 0.2
+    tournament_size = 0.3
+    run_EA(population_size,num_generations,mutation_prob,tournament_size)
+
+    import collections
+
+    dict(sorted(result.items(), key=lambda item: item[1]))
+
+    len(set(result.values()))
