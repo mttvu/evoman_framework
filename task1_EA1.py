@@ -186,7 +186,7 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size):
         best_f.append(best)
         std_f.append(std)
         mean_f.append(mean)
-        # print(f"Generation: {i + 1}, best fitness: {best}, std: {std}, mean: {mean}")
+        print(f"Generation: {i + 1}, best fitness: {best}, std: {std}, mean: {mean}")
         
         # save the population and the best result
         file_aux  = open(experiment_name+'/results.txt','a')
@@ -210,7 +210,7 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size):
             best_f_idx = i
         else:
             f_best.append(f_best[-1])
-    # print("FINISHED!")
+    print("FINISHED!")
 
     plt.plot(best_f)
     plt.plot(std_f)
