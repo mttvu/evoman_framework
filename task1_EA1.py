@@ -249,13 +249,7 @@ def grid_search():
     return results
 if __name__ == '__main__':
     population_size = 30
-    num_generations = 50
-    mutation_prob = 0.2
-    tournament_size = 0.3
+    num_generations = 100
+    mutation_prob = 0.01
+    tournament_size = 5
     run_EA(population_size,num_generations,mutation_prob,tournament_size)
-
-    import collections
-
-    dict(sorted(result.items(), key=lambda item: item[1]))
-
-    len(set(result.values()))
