@@ -85,8 +85,14 @@ class EA(object):
                 # generate random number between 0 and 1  
                 u = np.random.uniform(0,1)
                 if u < self.mutation_probability:
-                    # random number between bounds
-                    x_children[i][j] = np.random.uniform(low=self.bounds_min, high=self.bounds_max)
+                    # create random multiplier for previous value
+                    random_multiplier = np.random.uniform(0.80, 1.20)
+                    # random number between bounds by multiplication of previous number
+                    x_children[i][j] = x_children [i][j] * random_multiplier
+                    if x_children[i][j] > self.bounds_max: 
+                        x_children[i][j] = self.bounds_max
+                    elif x_children[i][j] < self.bounds_min: 
+                        x_children[i][j] = self.bounds_min
                     
         return x_children
 
