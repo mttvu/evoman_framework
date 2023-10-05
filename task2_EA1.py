@@ -209,12 +209,14 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
             f_best.append(f_best[-1])
     print("FINISHED!")
 
-#     plt.plot(best_f)
-#     plt.plot(std_f)
-#     plt.plot(mean_f)
-#     plt.legend(["best", "std", "mean"])
-#     plt.show()
-#     return f_best[-1]
+    plt.plot(best_f)
+    plt.plot(std_f)
+    plt.plot(mean_f)
+    plt.legend(["best", "std", "mean"])
+    plt.xlabel("Generation")
+    plt.ylabel("Fitness")
+    plt.title(f"Generalist: Fitness over enemies {enemies[0]}, {enemies[1]} and {enemies[2]}")
+    plt.show()
 
 # def grid_search():
 #     param_grid = {

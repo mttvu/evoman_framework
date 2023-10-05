@@ -213,15 +213,19 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
             f_best.append(f_best[-1])
     print("FINISHED!")
 
-    # plt.plot(best_f)
-    # plt.plot(std_f)
-    # plt.plot(mean_f)
-    # plt.legend(["best", "std", "mean"])
-    # plt.show()
+    # plot the best, st and mean
+    plt.plot(best_f)
+    plt.plot(std_f)
+    plt.plot(mean_f)
+    plt.legend(["best", "std", "mean"])
+    plt.xlabel("Generation")
+    plt.ylabel("Fitness")
+    plt.title(f"Generalist: Fitness over enemies {enemies[0]}, {enemies[1]} and {enemies[2]}")
+    plt.show()
 
 if __name__ == '__main__':
     population_size = 30
-    num_generations = 100
+    num_generations = 10
     mutation_prob = 0.01
     tournament_size = 5
     enemies = [2,3,4]
