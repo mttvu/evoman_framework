@@ -208,7 +208,7 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
     plt.legend(["best", "std", "mean"])
     plt.xlabel("Generation")
     plt.ylabel("Fitness")
-    plt.title("Generalist: Fitness over enemies 2, 3 and 4")
+    plt.title(f"Generalist: Fitness over enemies {enemies[0]}, {enemies[1]} and {enemies[2]}")
     plt.show()
 #     return f_best[-1]
 
