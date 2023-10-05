@@ -125,7 +125,7 @@ class EA(object):
 
         return x, f
 
-def run_EA(population_size,num_generations,mutation_prob,tournament_size):
+def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies):
     # choose this for not using visuals and thus making experiments faster
     headless = True
     if headless:
@@ -139,7 +139,7 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size):
 
     # initializes simulation in individual evolution mode, for single static enemy.
     env = Environment(experiment_name=experiment_name,
-                    enemies=[3],
+                    enemies=enemies,
                     playermode="ai",
                     player_controller=player_controller(n_hidden_neurons), # you  can insert your own controller here
                     enemymode="static",
@@ -249,4 +249,6 @@ if __name__ == '__main__':
     num_generations = 100
     mutation_prob = 0.01
     tournament_size = 5
-    run_EA(population_size,num_generations,mutation_prob,tournament_size)
+    enemies = [2,3,4]
+
+    run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies)
