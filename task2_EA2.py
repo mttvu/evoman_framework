@@ -125,7 +125,7 @@ class EA(object):
 
         return x_children, f_children
 
-def run_EA(population_size,num_generations,mutation_prob,tournament_size):
+def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies):
     # choose this for not using visuals and thus making experiments faster
     headless = True
     if headless:
@@ -139,7 +139,8 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size):
 
     # initializes simulation in individual evolution mode, for single static enemy.
     env = Environment(experiment_name=experiment_name,
-                    enemies=[2],
+                    enemies=enemies,
+                    multiplemode="yes",
                     playermode="ai",
                     player_controller=player_controller(n_hidden_neurons), # you  can insert your own controller here
                     enemymode="static",
@@ -154,10 +155,6 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size):
     # start writing your own code from here
     bounds_max = 1
     bounds_min = -1
-    # # population_size = 30
-    # # num_generations = 50
-    # # mutation_prob = 0.2
-    # # tournament_size = 0.3
     population = np.random.uniform(bounds_min, bounds_max, (population_size, gene_length))
 
     objective = Objective()
@@ -212,15 +209,20 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size):
             f_best.append(f_best[-1])
     print("FINISHED!")
 
-    # plt.plot(best_f)
-    # plt.plot(std_f)
-    # plt.plot(mean_f)
-    # plt.legend(["best", "std", "mean"])
-    # plt.show()
+    plt.plot(best_f)
+    plt.plot(std_f)
+    plt.plot(mean_f)
+    plt.legend(["best", "std", "mean"])
+    plt.xlabel("Generation")
+    plt.ylabel("Fitness")
+    plt.title("Generalist: Fitness over enemies 2, 3 and 4")
+    plt.show()
 
 if __name__ == '__main__':
     population_size = 30
-    num_generations = 100
+    num_generations = 30
     mutation_prob = 0.01
     tournament_size = 5
-    run_EA(population_size,num_generations,mutation_prob,tournament_size)
+    enemies = [2,3,4]
+
+    run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies)

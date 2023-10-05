@@ -125,7 +125,7 @@ class EA(object):
 
         return x, f
 
-def run_EA(population_size,num_generations,mutation_prob,tournament_size):
+def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies):
     # choose this for not using visuals and thus making experiments faster
     headless = True
     if headless:
@@ -139,7 +139,8 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size):
 
     # initializes simulation in individual evolution mode, for single static enemy.
     env = Environment(experiment_name=experiment_name,
-                    enemies=[3],
+                    enemies=enemies,
+                    multiplemode="yes",
                     playermode="ai",
                     player_controller=player_controller(n_hidden_neurons), # you  can insert your own controller here
                     enemymode="static",
@@ -164,7 +165,6 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size):
     fitness = []
     populations.append(population)
     fitness.append(f)
-    f_best = [f.max()]
     
     best_f = []
     std_f = []
@@ -172,7 +172,7 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size):
     best_f_idx = 0
 
     file_aux = open(experiment_name+'/results.txt','a')
-    file_aux.write('\n\ngen best')
+    file_aux.write('\n\ngen best std mean')
 
     for i in range(num_generations):
         best = f[np.argmax(f)]
@@ -200,19 +200,16 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size):
         population, f = ea.step(population, f)
         populations.append(population)
         fitness.append(f)
-
-        if f.max() > f_best[-1]:
-            f_best.append(f.max())
-            best_f_idx = i
-        else:
-            f_best.append(f_best[-1])
     print("FINISHED!")
 
-#     plt.plot(best_f)
-#     plt.plot(std_f)
-#     plt.plot(mean_f)
-#     plt.legend(["best", "std", "mean"])
-#     plt.show()
+    plt.plot(best_f)
+    plt.plot(std_f)
+    plt.plot(mean_f)
+    plt.legend(["best", "std", "mean"])
+    plt.xlabel("Generation")
+    plt.ylabel("Fitness")
+    plt.title("Generalist: Fitness over enemies 2, 3 and 4")
+    plt.show()
 #     return f_best[-1]
 
 # def grid_search():
@@ -246,7 +243,9 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size):
 
 if __name__ == '__main__':
     population_size = 30
-    num_generations = 100
+    num_generations = 30
     mutation_prob = 0.01
     tournament_size = 5
-    run_EA(population_size,num_generations,mutation_prob,tournament_size)
+    enemies = [2,3,4]
+
+    run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies)
