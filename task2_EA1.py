@@ -87,8 +87,8 @@ class EA(object):
                 u = np.random.uniform(0,1)
                 if u < self.mutation_probability:
                     # create bounds for multiplier
-                    upper_multiplier = 1.0 + mutation_size 
-                    lower_multiplier = 1.0 - mutation_size
+                    upper_multiplier = 1.0 + self.mutation_size 
+                    lower_multiplier = 1.0 - self.mutation_size
                     # create random multiplier for parent value
                     random_multiplier = np.random.uniform(lower_multiplier, upper_multiplier)
                     # random number between bounds
