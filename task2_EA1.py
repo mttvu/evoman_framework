@@ -23,7 +23,7 @@ class Objective:
         return f
 class EA(object):
 
-    def __init__(self, objective, environment, pop_size,tournament_size,mutation_probability, gene_length, bounds_min=None, bounds_max=None):
+    def __init__(self, objective, environment, pop_size,tournament_size,mutation_probability, gene_length, mutation_size, bounds_min=None, bounds_max=None):
         self.objective = objective
         self.environment = environment
         self.pop_size = pop_size
@@ -32,6 +32,7 @@ class EA(object):
         self.gene_length = gene_length
         self.bounds_min = bounds_min
         self.bounds_max = bounds_max
+        self.mutation_size = mutation_size
 
 
     def parent_selection(self, x_old, f_old):
@@ -85,8 +86,11 @@ class EA(object):
                 # generate random number between 0 and 1  
                 u = np.random.uniform(0,1)
                 if u < self.mutation_probability:
-                    # create random multiplier for previous value
-                    random_multiplier = np.random.uniform(0.80, 1.20)
+                    # create bounds for multiplier
+                    upper_multiplier = 1.0 + self.mutation_size 
+                    lower_multiplier = 1.0 - self.mutation_size
+                    # create random multiplier for parent value
+                    random_multiplier = np.random.uniform(lower_multiplier, upper_multiplier)
                     # random number between bounds
                     x_children[i][j] = x_children [i][j] * random_multiplier
                     if x_children[i][j] > self.bounds_max: 
@@ -164,7 +168,7 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
     population = np.random.uniform(bounds_min, bounds_max, (population_size, gene_length))
 
     objective = Objective()
-    ea = EA(objective, env, population_size,tournament_size,mutation_prob, gene_length, bounds_min, bounds_max)
+    ea = EA(objective, env, population_size,tournament_size,mutation_prob, gene_length, mutation_size, bounds_min, bounds_max)
     f = ea.evaluate(population)
 
     populations = []
@@ -257,6 +261,7 @@ if __name__ == '__main__':
     population_size = 30
     num_generations = 100
     mutation_prob = 0.01
+    mutation_size = 0.2 
     tournament_size = 5
     enemies = [2,3,4]
 
