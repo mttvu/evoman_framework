@@ -15,7 +15,7 @@ from demo_controller import player_controller
 # imports other libs
 import numpy as np
 import os
-
+import math
 class Objective:
     def objective(self,env,x):
         # run simulation
@@ -97,24 +97,29 @@ class EA(object):
         return x_children
 
     def survivor_selection(self, x_old, x_children, f_old, f_children):
-        n_children = len(x_children)
-
-        x_combined = np.concatenate((x_old, x_children))
-        f_combined = np.concatenate((f_old, f_children))
-
+        # simulated annealing
         x_new = np.empty_like(x_old)
         f_new = np.empty_like(f_old)
+        small_number = 1.0e-7
+        children_indices = np.arange(len(x_children))
 
-        population_indices = np.arange(self.pop_size + n_children)
-        # tournament selection
-        for i in range(self.pop_size):
-            # select tournament_size random individuals
-            candidates = np.random.choice(population_indices, int(self.tournament_size), replace=False)
-            # add best to survivors
-            best = candidates[np.argmax(f_combined[candidates])]
-            x_new[i] = x_combined[best]
-            f_new[i] = f_combined[best]
-            population_indices = np.delete(population_indices, np.where(population_indices == best))
+        for i in range(len(x_old)):
+            selected_index = np.random.choice(children_indices, replace=False)
+            children_indices = np.delete(children_indices, np.where(children_indices == selected_index))
+
+            if f_old[i] < f_new[selected_index]:
+                x_new[i] = x_children[selected_index]
+                f_new[i] = f_children[selected_index]
+            else:
+                accept = np.exp((f_old[i] - f_new[selected_index]+small_number)/(max(f_old) - np.mean(f_old) + small_number))
+                u = np.random.uniform(0,1)
+                if accept > u:
+                    x_new[i] = x_children[selected_index]
+                    f_new[i] = f_children[selected_index]
+
+                else:
+                    x_new[i] = x_old[i]
+                    f_new[i] = f_old[i]
 
         return x_new, f_new
 
