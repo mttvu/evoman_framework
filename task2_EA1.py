@@ -108,7 +108,7 @@ class EA(object):
         children_indices = np.arange(len(x_children))
 
         for i in range(len(x_old)):
-            selected_index = np.random.choice(children_indices, replace=False)
+            selected_index = np.random.choice(children_indices)
             children_indices = np.delete(children_indices, np.where(children_indices == selected_index))
 
             if f_old[i] < f_new[selected_index]:
@@ -264,8 +264,8 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
 
 if __name__ == '__main__':
     population_size = 30
-    num_generations = 100
-    mutation_prob = 0.01
+    num_generations = 1000
+    mutation_prob = 0.05
     mutation_size = 0.2 
     tournament_size = 5
     enemies = [2,3,4]
