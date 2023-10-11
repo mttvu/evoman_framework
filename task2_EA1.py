@@ -104,7 +104,6 @@ class EA(object):
         # simulated annealing
         x_new = np.empty_like(x_old)
         f_new = np.empty_like(f_old)
-        small_number = 1.0e-7
         children_indices = np.arange(len(x_children))
 
         for i in range(len(x_old)):
@@ -115,7 +114,7 @@ class EA(object):
                 x_new[i] = x_children[selected_index]
                 f_new[i] = f_children[selected_index]
             else:
-                accept = np.exp((f_old[i] - f_new[selected_index]+small_number)/(max(f_old) - np.mean(f_old) + small_number))
+                accept = np.exp((f_old[i] - f_children[selected_index])/(max(f_old) - np.mean(f_old)))
                 u = np.random.uniform(0,1)
                 if accept > u:
                     x_new[i] = x_children[selected_index]
@@ -263,11 +262,11 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
     # return results
 
 if __name__ == '__main__':
-    population_size = 30
-    num_generations = 1000
-    mutation_prob = 0.05
+    population_size = 50
+    num_generations = 100
+    mutation_prob = 0.1
     mutation_size = 0.2 
-    tournament_size = 5
+    tournament_size = 6
     enemies = [2,3,4]
 
     run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies)
