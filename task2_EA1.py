@@ -261,7 +261,8 @@ if __name__ == '__main__':
     population_size = 30
     num_generations = 100
     mutation_prob = 0.01
-    mutation_size = 0.2 
+    mutation_size_1 = 0.2
+    mutation_size_2 = 0.05
     tournament_size = 5
     enemies = [2,3,4]
 
