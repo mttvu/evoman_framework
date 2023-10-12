@@ -137,7 +137,7 @@ class EA(object):
             selected_index = np.random.choice(children_indices)
             children_indices = np.delete(children_indices, np.where(children_indices == selected_index))
 
-            if f_old[i] < f_new[selected_index]:
+            if f_old[i] < f_children[selected_index]:
                 x_new[i] = x_children[selected_index]
                 f_new[i] = f_children[selected_index]
             else:
@@ -168,8 +168,7 @@ class EA(object):
         x_children = self.recombination(x_parents, f_parents)
         x_children = self.mutation(x_children)
         f_children = self.evaluate(x_children)
-
-        current_gen_best = np.maximum(max(x_old), max(f_old))
+        current_gen_best = np.maximum(max(f_children),max(f_old))
         if current_gen_best > self.all_time_best_fitness:
             self.all_time_best_fitness = current_gen_best
         x, f = self.survivor_selection(x_old, x_children, f_old, f_children)
@@ -300,8 +299,8 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
     # return results
 
 if __name__ == '__main__':
-    population_size = 30
-    num_generations = 30
+    population_size = 10
+    num_generations = 10
     mutation_prob = 0.01
     mutation_size = 0.2 
     tournament_size = 5
