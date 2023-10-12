@@ -64,18 +64,40 @@ class EA(object):
             parent1 = x_parents[parents_idx[0]]
             parent2 = x_parents[parents_idx[1]]
             # generate a random binary mask for crossover
-            mask = np.random.randint(0, 2, len(parent1)).astype(bool)
+            # mask = np.random.randint(0, 2, len(parent1)).astype(bool)
             # create a child with the first part from parent1 and the second part from parent2
-            child = np.zeros_like(parent1)
-            child[mask] = parent1[mask]
-            child[~mask] = parent2[~mask]
+            # child = np.zeros_like(parent1)
+            # child[mask] = parent1[mask]
+            # child[~mask] = parent2[~mask]
 
-            # create second child with the inverted mask
+            # # create second child with the inverted mask
+            # child2 = np.zeros_like(parent1)
+            # child2[~mask] = parent1[~mask]
+            # child2[mask] = parent2[mask]
+            # x_children.append(child)
+            # x_children.append(child2)
+
+            child = np.zeros_like(parent1)
             child2 = np.zeros_like(parent1)
-            child2[~mask] = parent1[~mask]
-            child2[mask] = parent2[mask]
+            child3 = np.zeros_like(parent1)
+
+            for i in range(len(parent1)):
+                chance = np.random.uniform(0, 1)
+                if chance > 0.5:
+                    child[i] = parent1[i]
+                    child2[i] = parent2[i]
+                else:
+                    child[i] = parent2[i]
+                    child2[i] = parent1[i]
+
+                if i % 2 == 0:
+                    child3[i] = parent1[i]
+                else:
+                    child3[i] = parent2[i]
+
             x_children.append(child)
             x_children.append(child2)
+            x_children.append(child3)
 
         return np.array(x_children)
 
@@ -225,7 +247,8 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
     plt.legend(["best", "std", "mean"])
     plt.xlabel("Generation")
     plt.ylabel("Fitness")
-    plt.title(f"Generalist: Fitness over enemies {enemies[0]}, {enemies[1]} and {enemies[2]}")
+    title = f"Generalist: Fitness over enemies {enemies[0]} an {enemies[1]}"
+    # plt.title(f"Generalist: Fitness over enemies {enemies[0]}, {enemies[1]} and {enemies[2]}")
     plt.show()
 
 # def grid_search():
@@ -259,10 +282,10 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
 
 if __name__ == '__main__':
     population_size = 30
-    num_generations = 100
+    num_generations = 30
     mutation_prob = 0.01
     mutation_size = 0.2 
     tournament_size = 5
-    enemies = [2,3,4]
+    enemies = [7,8]
 
     run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies)
