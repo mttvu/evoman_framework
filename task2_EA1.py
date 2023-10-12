@@ -299,12 +299,12 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
     # return results
 
 if __name__ == '__main__':
-    population_size = 10
-    num_generations = 10
-    mutation_prob = 0.01
+    population_size = 30
+    num_generations = 100
+    mutation_prob = 0.05
     mutation_size = 0.2 
     tournament_size = 5
-    enemies = [1,5]
+    enemies = [2,3,4]
 
     run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies)
 
