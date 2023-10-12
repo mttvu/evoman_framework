@@ -147,7 +147,7 @@ class EA(object):
         x_children = self.mutation(x_children)
         f_children = self.evaluate(x_children)
 
-        current_gen_best = np.maximum(max(f_parents), max(f_children))
+        current_gen_best = np.maximum(max(x_old), max(f_old))
         if current_gen_best > self.all_time_best_fitness:
             self.all_time_best_fitness = current_gen_best
         x, f = self.survivor_selection(x_old, x_children, f_old, f_children)
