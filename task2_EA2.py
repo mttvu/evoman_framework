@@ -23,7 +23,7 @@ class Objective:
         return f
 class EA(object):
 
-    def __init__(self, objective, environment, pop_size,tournament_size,mutation_probability, gene_length, mutation_size, bounds_min=None, bounds_max=None):
+    def __init__(self, objective, environment, pop_size,tournament_size,mutation_probability, gene_length, mutation_size_1, mutation_size_2, generation, bounds_min=None, bounds_max=None):
         self.objective = objective
         self.environment = environment
         self.pop_size = pop_size
@@ -32,7 +32,10 @@ class EA(object):
         self.gene_length = gene_length
         self.bounds_min = bounds_min
         self.bounds_max = bounds_max
-        self.mutation_size = mutation_size
+        self.mutation_size_1 = mutation_size_1
+        self.mutation_size_2 = mutation_size_2
+        self.generation = generation
+        self.mutation_size = mutation_size_1
 
 
     def parent_selection(self, x_old, f_old):
@@ -156,6 +159,10 @@ class EA(object):
         x_children = self.mutation(x_children)
         f_children = self.evaluate(x_children)
 
+        self.generation += 1 
+        if self.generation > num_generations/3: 
+            self.mutation_size = self.mutation_size_2 
+
         # only the children are selected to move on to the next generation
         x, f = self.survivor_selection(x_old, x_children, f_old, f_children)
 
@@ -195,7 +202,7 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
     population = np.random.uniform(bounds_min, bounds_max, (population_size, gene_length))
 
     objective = Objective()
-    ea = EA(objective, env, population_size, tournament_size, mutation_prob, gene_length, mutation_size, bounds_min, bounds_max)
+    ea = EA(objective, env, population_size, tournament_size, mutation_prob, gene_length, mutation_size_1, mutation_size_2, generation, bounds_min, bounds_max)
     f = ea.evaluate(population)
 
     populations = []
@@ -261,7 +268,9 @@ if __name__ == '__main__':
     population_size = 30
     num_generations = 30
     mutation_prob = 0.01
-    mutation_size = 0.2
+    mutation_size_1 = 0.2
+    mutation_size_2 = 0.05 
+    generation = 0 
     tournament_size = 5
     enemies = [1,5]
 
