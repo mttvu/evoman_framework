@@ -66,19 +66,44 @@ class EA(object):
             parents_idx = np.random.choice(parent_size, 2, replace=False)
             parent1 = x_parents[parents_idx[0]]
             parent2 = x_parents[parents_idx[1]]
-            # generate a random binary mask for crossover
-            mask = np.random.randint(0, 2, len(parent1)).astype(bool)
-            # create a child with the first part from parent1 and the second part from parent2
-            child = np.zeros_like(parent1)
-            child[mask] = parent1[mask]
-            child[~mask] = parent2[~mask]
+            # # generate a random binary mask for crossover
+            # mask = np.random.randint(0, 2, len(parent1)).astype(bool)
+            # # create a child with the first part from parent1 and the second part from parent2
+            # child = np.zeros_like(parent1)
+            # child[mask] = parent1[mask]
+            # child[~mask] = parent2[~mask]
 
-            # create second child with the inverted mask
+            # # create second child with the inverted mask
+            # child2 = np.zeros_like(parent1)
+            # child2[~mask] = parent1[~mask]
+            # child2[mask] = parent2[mask]
+            # x_children.append(child)
+            # x_children.append(child2)
+
+            child = np.zeros_like(parent1)
             child2 = np.zeros_like(parent1)
-            child2[~mask] = parent1[~mask]
-            child2[mask] = parent2[mask]
+            child3 = np.zeros_like(parent1)
+
+            for i in range(len(parent1)):
+                chance = np.random.uniform(0, 1)
+                if chance > 0.5:
+                    child[i] = parent1[i]
+                    child2[i] = parent2[i]
+                    if i % 2 == 0:
+                        child3[i] = parent1[i]
+                    else:
+                        child3[i] = parent2[i]
+                else:
+                    child[i] = parent2[i]
+                    child2[i] = parent1[i]
+                    if i % 2 == 0:
+                        child3[i] = parent1[i]
+                    else:
+                        child3[i] = parent2[i]
+
             x_children.append(child)
             x_children.append(child2)
+            x_children.append(child3)
 
         return np.array(x_children)
 
@@ -106,21 +131,21 @@ class EA(object):
     def survivor_selection(self, x_old, x_children, f_old, f_children):
         n_children = len(x_children)
 
-        x_combined = np.concatenate((x_old, x_children))
-        f_combined = np.concatenate((f_old, f_children))
+        # x_combined = np.concatenate((x_old, x_children))
+        # f_combined = np.concatenate((f_old, f_children))
 
         x_new = np.empty_like(x_old)
         f_new = np.empty_like(f_old)
 
-        population_indices = np.arange(self.pop_size + n_children)
+        population_indices = np.arange(n_children)
         # tournament selection
         for i in range(self.pop_size):
             # select tournament_size random individuals
             candidates = np.random.choice(population_indices, int(self.tournament_size), replace=False)
             # add best to survivors
-            best = candidates[np.argmax(f_combined[candidates])]
-            x_new[i] = x_combined[best]
-            f_new[i] = f_combined[best]
+            best = candidates[np.argmax(f_children[candidates])]
+            x_new[i] = x_children[best]
+            f_new[i] = f_children[best]
             population_indices = np.delete(population_indices, np.where(population_indices == best))
 
         return x_new, f_new
@@ -139,8 +164,10 @@ class EA(object):
             self.mutation_size = self.mutation_size_2 
 
         # only the children are selected to move on to the next generation
+        x, f = self.survivor_selection(x_old, x_children, f_old, f_children)
 
-        return x_children, f_children
+        # return x_children, f_children
+        return x, f
 
 def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies):
     # choose this for not using visuals and thus making experiments faster
@@ -172,10 +199,6 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
     # start writing your own code from here
     bounds_max = 1
     bounds_min = -1
-    # # population_size = 30
-    # # num_generations = 50
-    # # mutation_prob = 0.2
-    # # tournament_size = 0.3
     population = np.random.uniform(bounds_min, bounds_max, (population_size, gene_length))
 
     objective = Objective()
@@ -237,17 +260,18 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
     plt.legend(["best", "std", "mean"])
     plt.xlabel("Generation")
     plt.ylabel("Fitness")
-    plt.title(f"Generalist: Fitness over enemies {enemies[0]}, {enemies[1]} and {enemies[2]}")
+    plt.title(f"Generalist: Fitness over enemies {enemies[0]}, {enemies[1]}")
+    # plt.title(f"Generalist: Fitness over enemies {enemies[0]}, {enemies[1]} and {enemies[2]}")
     plt.show()
 
 if __name__ == '__main__':
     population_size = 30
-    num_generations = 10
+    num_generations = 30
     mutation_prob = 0.01
     mutation_size_1 = 0.2
     mutation_size_2 = 0.05 
     generation = 0 
     tournament_size = 5
-    enemies = [2,3,4]
+    enemies = [1,5]
 
     run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies)

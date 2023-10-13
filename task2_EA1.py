@@ -15,7 +15,7 @@ from demo_controller import player_controller
 # imports other libs
 import numpy as np
 import os
-
+import math
 class Objective:
     def objective(self,env,x):
         # run simulation
@@ -36,6 +36,7 @@ class EA(object):
         self.mutation_size_2 = mutation_size_2 
         self.generation = generation 
         self.mutation_size = mutation_size_1
+        self.all_time_best_fitness = 0
 
 
     def parent_selection(self, x_old, f_old):
@@ -60,25 +61,51 @@ class EA(object):
     def recombination(self, x_parents, f_parents):
         x_children = []
         parent_size = len(x_parents)
+        parent_indices = np.arange(parent_size)
         # Uniform crossover
         for i in range(parent_size):
-            # select two parents at random
-            parents_idx = np.random.choice(parent_size, 2, replace=False)
+            # select two parents at random 
+            parents_idx = np.random.choice(parent_indices, 2, replace=False)          
+            if len(parent_indices) > 3:
+                parent_indices = np.delete(parent_indices, np.where(np.isin(parent_indices, parents_idx)))
+
             parent1 = x_parents[parents_idx[0]]
             parent2 = x_parents[parents_idx[1]]
             # generate a random binary mask for crossover
-            mask = np.random.randint(0, 2, len(parent1)).astype(bool)
+            # mask = np.random.randint(0, 2, len(parent1)).astype(bool)
             # create a child with the first part from parent1 and the second part from parent2
-            child = np.zeros_like(parent1)
-            child[mask] = parent1[mask]
-            child[~mask] = parent2[~mask]
+            # child = np.zeros_like(parent1)
+            # child[mask] = parent1[mask]
+            # child[~mask] = parent2[~mask]
 
-            # create second child with the inverted mask
+            # # create second child with the inverted mask
+            # child2 = np.zeros_like(parent1)
+            # child2[~mask] = parent1[~mask]
+            # child2[mask] = parent2[mask]
+            # x_children.append(child)
+            # x_children.append(child2)
+
+            child = np.zeros_like(parent1)
             child2 = np.zeros_like(parent1)
-            child2[~mask] = parent1[~mask]
-            child2[mask] = parent2[mask]
+            child3 = np.zeros_like(parent1)
+
+            for i in range(len(parent1)):
+                chance = np.random.uniform(0, 1)
+                if chance > 0.5:
+                    child[i] = parent1[i]
+                    child2[i] = parent2[i]
+                else:
+                    child[i] = parent2[i]
+                    child2[i] = parent1[i]
+
+                if i % 2 == 0:
+                    child3[i] = parent1[i]
+                else:
+                    child3[i] = parent2[i]
+
             x_children.append(child)
             x_children.append(child2)
+            x_children.append(child3)
 
         return np.array(x_children)
 
@@ -104,24 +131,35 @@ class EA(object):
         return x_children
 
     def survivor_selection(self, x_old, x_children, f_old, f_children):
-        n_children = len(x_children)
-
-        x_combined = np.concatenate((x_old, x_children))
-        f_combined = np.concatenate((f_old, f_children))
-
+        # simulated annealing
         x_new = np.empty_like(x_old)
         f_new = np.empty_like(f_old)
+        children_indices = np.arange(len(x_children))
 
-        population_indices = np.arange(self.pop_size + n_children)
-        # tournament selection
-        for i in range(self.pop_size):
-            # select tournament_size random individuals
-            candidates = np.random.choice(population_indices, int(self.tournament_size), replace=False)
-            # add best to survivors
-            best = candidates[np.argmax(f_combined[candidates])]
-            x_new[i] = x_combined[best]
-            f_new[i] = f_combined[best]
-            population_indices = np.delete(population_indices, np.where(population_indices == best))
+        for i in range(len(x_old)):
+            selected_index = np.random.choice(children_indices)
+            children_indices = np.delete(children_indices, np.where(children_indices == selected_index))
+
+            if f_old[i] < f_children[selected_index]:
+                x_new[i] = x_children[selected_index]
+                f_new[i] = f_children[selected_index]
+            else:
+                # always keep individual with largest fitness
+                # or we could keep track of the highest achieved fitness
+                if i == np.argmax(f_old):
+                    x_new[i] = x_old[i]
+                    f_new[i] = f_old[i] 
+                else:
+                    accept = 1 - np.exp(-((f_old[i] - f_children[selected_index])/abs(self.all_time_best_fitness - np.mean(f_old))))
+                    u = np.random.uniform(0,1)
+                    # print(f'accept: {accept}, u: {u}')
+                    if accept > u:
+                        x_new[i] = x_children[selected_index]
+                        f_new[i] = f_children[selected_index]
+
+                    else:
+                        x_new[i] = x_old[i]
+                        f_new[i] = f_old[i]
 
         return x_new, f_new
 
@@ -133,7 +171,9 @@ class EA(object):
         x_children = self.recombination(x_parents, f_parents)
         x_children = self.mutation(x_children)
         f_children = self.evaluate(x_children)
-
+        current_gen_best = np.maximum(max(f_children),max(f_old))
+        if current_gen_best > self.all_time_best_fitness:
+            self.all_time_best_fitness = current_gen_best
         x, f = self.survivor_selection(x_old, x_children, f_old, f_children)
 
         self.generation += 1 
@@ -233,7 +273,8 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
     plt.legend(["best", "std", "mean"])
     plt.xlabel("Generation")
     plt.ylabel("Fitness")
-    plt.title(f"Generalist: Fitness over enemies {enemies[0]}, {enemies[1]} and {enemies[2]}")
+    title = f"Generalist: Fitness over enemies {enemies[0]} an {enemies[1]}"
+    # plt.title(f"Generalist: Fitness over enemies {enemies[0]}, {enemies[1]} and {enemies[2]}")
     plt.show()
 
 # def grid_search():
@@ -276,3 +317,4 @@ if __name__ == '__main__':
     enemies = [2,3,4]
 
     run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies)
+
