@@ -16,7 +16,6 @@ from demo_controller import player_controller
 import numpy as np
 import os
 
-
 class NewFitnessEnvironment(Environment):
     def fitness_single(self):
         hp = self.get_playerlife()
