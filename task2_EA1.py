@@ -15,6 +15,7 @@ from demo_controller import player_controller
 # imports other libs
 import numpy as np
 import os
+import math
 
 class NewFitnessEnvironment(Environment):
     def fitness_single(self):
@@ -35,7 +36,7 @@ class Objective:
         return f
 class EA(object):
 
-    def __init__(self, objective, environment, pop_size,tournament_size,mutation_probability, gene_length, mutation_size, bounds_min=None, bounds_max=None):
+    def __init__(self, objective, environment, pop_size,tournament_size,mutation_probability, gene_length, mutation_size_1, mutation_size_2, generation, bounds_min=None, bounds_max=None):
         self.objective = objective
         self.environment = environment
         self.pop_size = pop_size
@@ -44,7 +45,11 @@ class EA(object):
         self.gene_length = gene_length
         self.bounds_min = bounds_min
         self.bounds_max = bounds_max
-        self.mutation_size = mutation_size
+        self.mutation_size_1 = mutation_size_1 
+        self.mutation_size_2 = mutation_size_2 
+        self.generation = generation 
+        self.mutation_size = mutation_size_1
+        self.all_time_best_fitness = 0
 
 
     def parent_selection(self, x_old, f_old):
@@ -69,10 +74,14 @@ class EA(object):
     def recombination(self, x_parents, f_parents):
         x_children = []
         parent_size = len(x_parents)
+        parent_indices = np.arange(parent_size)
         # Uniform crossover
         for i in range(parent_size):
-            # select two parents at random
-            parents_idx = np.random.choice(parent_size, 2, replace=False)
+            # select two parents at random 
+            parents_idx = np.random.choice(parent_indices, 2, replace=False)          
+            if len(parent_indices) > 3:
+                parent_indices = np.delete(parent_indices, np.where(np.isin(parent_indices, parents_idx)))
+
             parent1 = x_parents[parents_idx[0]]
             parent2 = x_parents[parents_idx[1]]
             # generate a random binary mask for crossover
@@ -135,24 +144,35 @@ class EA(object):
         return x_children
 
     def survivor_selection(self, x_old, x_children, f_old, f_children):
-        n_children = len(x_children)
-
-        x_combined = np.concatenate((x_old, x_children))
-        f_combined = np.concatenate((f_old, f_children))
-
+        # simulated annealing
         x_new = np.empty_like(x_old)
         f_new = np.empty_like(f_old)
+        children_indices = np.arange(len(x_children))
 
-        population_indices = np.arange(self.pop_size + n_children)
-        # tournament selection
-        for i in range(self.pop_size):
-            # select tournament_size random individuals
-            candidates = np.random.choice(population_indices, int(self.tournament_size), replace=False)
-            # add best to survivors
-            best = candidates[np.argmax(f_combined[candidates])]
-            x_new[i] = x_combined[best]
-            f_new[i] = f_combined[best]
-            population_indices = np.delete(population_indices, np.where(population_indices == best))
+        for i in range(len(x_old)):
+            selected_index = np.random.choice(children_indices)
+            children_indices = np.delete(children_indices, np.where(children_indices == selected_index))
+
+            if f_old[i] < f_children[selected_index]:
+                x_new[i] = x_children[selected_index]
+                f_new[i] = f_children[selected_index]
+            else:
+                # always keep individual with largest fitness
+                # or we could keep track of the highest achieved fitness
+                if i == np.argmax(f_old):
+                    x_new[i] = x_old[i]
+                    f_new[i] = f_old[i] 
+                else:
+                    accept = 1 - np.exp(-((f_old[i] - f_children[selected_index])/abs(self.all_time_best_fitness - np.mean(f_old))))
+                    u = np.random.uniform(0,1)
+                    # print(f'accept: {accept}, u: {u}')
+                    if accept > u:
+                        x_new[i] = x_children[selected_index]
+                        f_new[i] = f_children[selected_index]
+
+                    else:
+                        x_new[i] = x_old[i]
+                        f_new[i] = f_old[i]
 
         return x_new, f_new
 
@@ -164,8 +184,15 @@ class EA(object):
         x_children = self.recombination(x_parents, f_parents)
         x_children = self.mutation(x_children)
         f_children = self.evaluate(x_children)
-
+        current_gen_best = np.maximum(max(f_children),max(f_old))
+        if current_gen_best > self.all_time_best_fitness:
+            self.all_time_best_fitness = current_gen_best
         x, f = self.survivor_selection(x_old, x_children, f_old, f_children)
+
+        self.generation += 1 
+        if self.generation > num_generations/3: 
+            self.mutation_size = self.mutation_size_2
+            
 
         return x, f
 
@@ -204,7 +231,7 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
     population = np.random.uniform(bounds_min, bounds_max, (population_size, gene_length))
 
     objective = Objective()
-    ea = EA(objective, env, population_size,tournament_size,mutation_prob, gene_length, mutation_size, bounds_min, bounds_max)
+    ea = EA(objective, env, population_size,tournament_size,mutation_prob, gene_length, mutation_size_1, mutation_size_2, generation, bounds_min, bounds_max)
     f = ea.evaluate(population)
 
     populations = []
@@ -295,11 +322,14 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
     # return results
 
 if __name__ == '__main__':
-    population_size = 40
-    num_generations = 30
-    mutation_prob = 0.05
-    mutation_size = 0.2 
-    tournament_size = 10
-    enemies = [3,4,5,7]
+    population_size = 30
+    num_generations = 100
+    mutation_prob = 0.01
+    mutation_size_1 = 0.2
+    mutation_size_2 = 0.05
+    generation = 0
+    tournament_size = 5
+    enemies = [2,3,4]
 
     run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies)
+
