@@ -16,6 +16,19 @@ from demo_controller import player_controller
 import numpy as np
 import os
 import math
+
+class NewFitnessEnvironment(Environment):
+    def fitness_single(self):
+        hp = self.get_playerlife()
+        enemy = self.get_enemylife()
+        time = self.get_time()
+        a = 0.3
+        b = 0.7
+        return (a*hp + b*(100-enemy))/(a+b)
+
+    def cons_multi(self, values):
+        return values.mean() # - values.std()
+
 class Objective:
     def objective(self,env,x):
         # run simulation
@@ -196,7 +209,9 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
     n_hidden_neurons = 10
 
     # initializes simulation in individual evolution mode, for single static enemy.
-    env = Environment(experiment_name=experiment_name,
+    # env = Environment(
+    env = NewFitnessEnvironment(
+                    experiment_name=experiment_name,
                     enemies=enemies,
                     multiplemode="yes",
                     playermode="ai",
