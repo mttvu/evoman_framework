@@ -16,6 +16,9 @@ from demo_controller import player_controller
 import numpy as np
 import os
 import math
+import optuna
+from optuna.study import StudyDirection
+from optuna_dashboard import run_server
 
 class NewFitnessEnvironment(Environment):
     def fitness_single(self):
@@ -36,7 +39,7 @@ class Objective:
         return f
 class EA(object):
 
-    def __init__(self, objective, environment, pop_size,tournament_size,mutation_probability, gene_length, mutation_size_1, mutation_size_2, generation, bounds_min=None, bounds_max=None):
+    def __init__(self, objective, environment, pop_size,tournament_size,mutation_probability, gene_length, mutation_size_1, mutation_size_2, generation, num_generations,bounds_min=None, bounds_max=None):
         self.objective = objective
         self.environment = environment
         self.pop_size = pop_size
@@ -48,6 +51,7 @@ class EA(object):
         self.mutation_size_1 = mutation_size_1 
         self.mutation_size_2 = mutation_size_2 
         self.generation = generation 
+        self.num_generations = num_generations
         self.mutation_size = mutation_size_1
         self.all_time_best_fitness = 0
 
@@ -62,7 +66,10 @@ class EA(object):
         # tournament selection
         for i in range(parents_size):
             # select tournament_size random individuals
-            candidates = np.random.choice(population_indices, int(self.tournament_size), replace=False)
+            if self.tournament_size < len(population_indices):
+                candidates = np.random.choice(population_indices, int(self.tournament_size), replace=False)
+            else:
+                candidates = population_indices
             # choose the best individual among them as parent
             best = candidates[np.argmax(f_old[candidates])]
             x_parents[i] = x_old[best]
@@ -190,13 +197,13 @@ class EA(object):
         x, f = self.survivor_selection(x_old, x_children, f_old, f_children)
 
         self.generation += 1 
-        if self.generation > num_generations/3: 
+        if self.generation > self.num_generations/3: 
             self.mutation_size = self.mutation_size_2
             
 
         return x, f
 
-def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies):
+def run_EA(population_size,num_generations,mutation_prob,mutation_size_1, mutation_size_2,tournament_size,enemies, show_plot=False):
     # choose this for not using visuals and thus making experiments faster
     headless = True
     if headless:
@@ -228,10 +235,11 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
     # start writing your own code from here
     bounds_max = 1
     bounds_min = -1
+    generation = 0
     population = np.random.uniform(bounds_min, bounds_max, (population_size, gene_length))
 
     objective = Objective()
-    ea = EA(objective, env, population_size,tournament_size,mutation_prob, gene_length, mutation_size_1, mutation_size_2, generation, bounds_min, bounds_max)
+    ea = EA(objective, env, population_size,tournament_size,mutation_prob, gene_length, mutation_size_1, mutation_size_2, generation, num_generations,bounds_min, bounds_max)
     f = ea.evaluate(population)
 
     populations = []
@@ -282,54 +290,54 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
             f_best.append(f_best[-1])
     print("FINISHED!")
 
-    plt.plot(best_f)
-    plt.plot(std_f)
-    plt.plot(mean_f)
-    plt.legend(["best", "std", "mean"])
-    plt.xlabel("Generation")
-    plt.ylabel("Fitness")
-    title = f"Generalist: Fitness over enemies {enemies[0]} an {enemies[1]}"
-    # plt.title(f"Generalist: Fitness over enemies {enemies[0]}, {enemies[1]} and {enemies[2]}")
-    plt.show()
+    if show_plot:
+        plt.plot(best_f)
+        plt.plot(std_f)
+        plt.plot(mean_f)
+        plt.legend(["best", "std", "mean"])
+        plt.xlabel("Generation")
+        plt.ylabel("Fitness")
+        title = f"Generalist: Fitness over enemies {enemies[0]} an {enemies[1]}"
+        # plt.title(f"Generalist: Fitness over enemies {enemies[0]}, {enemies[1]} and {enemies[2]}")
+        plt.show()
 
-# def grid_search():
-#     param_grid = {
-#     'population_size': [30, 50, 100],
-#     'mutation_prob': [0.01, 0.1, 0.2, 0.3],
-#     'num_generations': [30, 50, 100],
-#     'tournament_size': [3, 5, 10],
-#     }
-#     total_combinations = len(param_grid['population_size']) * len(param_grid['mutation_prob']) * len(param_grid['num_generations']) * len(param_grid['tournament_size'])
-#     current_combination = 0
-#     results = {}
-#     for population_size in param_grid['population_size']:
-#         for mutation_prob in param_grid['mutation_prob']:
-#             for num_generations in param_grid['num_generations']:
-#                 for tournament_size in param_grid['tournament_size']:
-#                     current_combination += 1
-#                     print(f"Progress: {current_combination}/{total_combinations}")
-#                     print("Parameters:")
-#                     print("Population Size:", population_size)
-#                     print("num_generations:", num_generations)
-#                     print("mutation_prob:", mutation_prob)
-#                     print("tournament_size:", tournament_size)
-#                     fitness = run_EA(population_size,num_generations,mutation_prob,tournament_size)
-                    
-#                     results[(population_size,num_generations,mutation_prob,tournament_size)] = fitness
-                    
-#                     print("fitness:", fitness)
+    return f_best[-1]
 
-    # return results
+def optuna_objective(trial):
+    population_size = trial.suggest_int("population_size", 20, 150)
+    num_generations = trial.suggest_int("num_generations", 10, 150)
+    mutation_prob = trial.suggest_float("mutation_prob", 0, 1)
+    mutation_size_1 = trial.suggest_float("mutation_size_1", 0, 1)
+    mutation_size_2 = trial.suggest_float("mutation_size_2", 0, 1)
+    tournament_size = trial.suggest_int("tournament_size", 2, 20)
+    enemies = [2,5,6]
+    print(f'population_size: {population_size}')
+    print(f'num_generations: {num_generations}')
+    print(f'mutation_prob: {mutation_prob}')
+    print(f'mutation_size_1: {mutation_size_1}')
+    print(f'mutation_size_2: {mutation_size_2}')
+    print(f'tournament_size: {tournament_size}')
+    return run_EA(population_size,num_generations,mutation_prob, mutation_size_1,mutation_size_2,tournament_size,enemies)
+
+def optuna_optimization():
+    # storage = optuna.storages.InMemoryStorage()
+    storage = 'sqlite:///C:/Users/thaom/Documents/School/VU/master/evolutionary computing/optuna/db.db'
+    study = optuna.create_study(direction=StudyDirection.MAXIMIZE,storage=storage)
+    study.optimize(optuna_objective, n_trials=100)
+    # run_server(storage)
+    print("Best value: {} (params: {})\n".format(study.best_value, study.best_params))
 
 if __name__ == '__main__':
-    population_size = 30
-    num_generations = 100
-    mutation_prob = 0.01
-    mutation_size_1 = 0.2
-    mutation_size_2 = 0.05
-    generation = 0
-    tournament_size = 5
-    enemies = [2,3,4]
+    # population_size = 30
+    # num_generations = 100
+    # mutation_prob = 0.01
+    # mutation_size_1 = 0.2
+    # mutation_size_2 = 0.05
+    # generation = 0
+    # tournament_size = 5
+    # enemies = [2,3,4]
 
-    run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies)
+    # run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies)
+
+    optuna_optimization()
 
