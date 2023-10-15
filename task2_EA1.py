@@ -16,9 +16,9 @@ from demo_controller import player_controller
 import numpy as np
 import os
 import math
-import optuna
-from optuna.study import StudyDirection
-from optuna_dashboard import run_server
+# import optuna
+# from optuna.study import StudyDirection
+# from optuna_dashboard import run_server
 
 class NewFitnessEnvironment(Environment):
     def fitness_single(self):
@@ -203,7 +203,7 @@ class EA(object):
 
         return x, f
 
-def run_EA(population_size,num_generations,mutation_prob,mutation_size_1, mutation_size_2,tournament_size,enemies, show_plot=False):
+def run_EA(population_size,num_generations,mutation_prob,mutation_size_1, mutation_size_2,tournament_size,enemies, show_plot=True):
     # choose this for not using visuals and thus making experiments faster
     headless = True
     if headless:
@@ -254,7 +254,7 @@ def run_EA(population_size,num_generations,mutation_prob,mutation_size_1, mutati
     best_f_idx = 0
 
     file_aux = open(experiment_name+'/results.txt','a')
-    file_aux.write('\n\ngen best')
+    file_aux.write('\n\ngen best std mean')
 
     for i in range(num_generations):
         best = f[np.argmax(f)]
@@ -277,7 +277,10 @@ def run_EA(population_size,num_generations,mutation_prob,mutation_size_1, mutati
         file_aux.close()
 
         # saves file with the best solution
-        np.savetxt(experiment_name+'/best.txt', populations[best_f_idx])
+        np.savetxt(experiment_name+'/best.txt', population[np.argmax(f)])
+
+        # saves file with the best population
+        np.savetxt(experiment_name+'/bestpopulation.txt', populations[best_f_idx])
 
         population, f = ea.step(population, f)
         populations.append(population)
@@ -297,47 +300,46 @@ def run_EA(population_size,num_generations,mutation_prob,mutation_size_1, mutati
         plt.legend(["best", "std", "mean"])
         plt.xlabel("Generation")
         plt.ylabel("Fitness")
-        title = f"Generalist: Fitness over enemies {enemies[0]} an {enemies[1]}"
-        # plt.title(f"Generalist: Fitness over enemies {enemies[0]}, {enemies[1]} and {enemies[2]}")
+        plt.title = f"Enemies {enemies[0]}, {enemies[1]}, {enemies[2]}"
         plt.show()
 
     return f_best[-1]
 
-def optuna_objective(trial):
-    population_size = trial.suggest_int("population_size", 20, 150)
-    num_generations = trial.suggest_int("num_generations", 10, 150)
-    mutation_prob = trial.suggest_float("mutation_prob", 0, 1)
-    mutation_size_1 = trial.suggest_float("mutation_size_1", 0, 1)
-    mutation_size_2 = trial.suggest_float("mutation_size_2", 0, 1)
-    tournament_size = trial.suggest_int("tournament_size", 2, 20)
-    enemies = [2,5,6]
-    print(f'population_size: {population_size}')
-    print(f'num_generations: {num_generations}')
-    print(f'mutation_prob: {mutation_prob}')
-    print(f'mutation_size_1: {mutation_size_1}')
-    print(f'mutation_size_2: {mutation_size_2}')
-    print(f'tournament_size: {tournament_size}')
-    return run_EA(population_size,num_generations,mutation_prob, mutation_size_1,mutation_size_2,tournament_size,enemies)
+# def optuna_objective(trial):
+#     population_size = trial.suggest_int("population_size", 20, 150)
+#     num_generations = trial.suggest_int("num_generations", 10, 150)
+#     mutation_prob = trial.suggest_float("mutation_prob", 0, 1)
+#     mutation_size_1 = trial.suggest_float("mutation_size_1", 0, 1)
+#     mutation_size_2 = trial.suggest_float("mutation_size_2", 0, 1)
+#     tournament_size = trial.suggest_int("tournament_size", 2, 20)
+#     enemies = [2,5,6]
+#     print(f'population_size: {population_size}')
+#     print(f'num_generations: {num_generations}')
+#     print(f'mutation_prob: {mutation_prob}')
+#     print(f'mutation_size_1: {mutation_size_1}')
+#     print(f'mutation_size_2: {mutation_size_2}')
+#     print(f'tournament_size: {tournament_size}')
+#     return run_EA(population_size,num_generations,mutation_prob, mutation_size_1,mutation_size_2,tournament_size,enemies)
 
-def optuna_optimization():
-    # storage = optuna.storages.InMemoryStorage()
-    storage = 'sqlite:///C:/Users/thaom/Documents/School/VU/master/evolutionary computing/optuna/db.db'
-    study = optuna.create_study(direction=StudyDirection.MAXIMIZE,storage=storage)
-    study.optimize(optuna_objective, n_trials=100)
-    # run_server(storage)
-    print("Best value: {} (params: {})\n".format(study.best_value, study.best_params))
+# def optuna_optimization():
+#     # storage = optuna.storages.InMemoryStorage()
+#     storage = 'sqlite:///C:/Users/thaom/Documents/School/VU/master/evolutionary computing/optuna/db.db'
+#     study = optuna.create_study(direction=StudyDirection.MAXIMIZE,storage=storage)
+#     study.optimize(optuna_objective, n_trials=100)
+#     # run_server(storage)
+#     print("Best value: {} (params: {})\n".format(study.best_value, study.best_params))
 
 if __name__ == '__main__':
-    # population_size = 30
-    # num_generations = 100
-    # mutation_prob = 0.01
-    # mutation_size_1 = 0.2
-    # mutation_size_2 = 0.05
-    # generation = 0
-    # tournament_size = 5
-    # enemies = [2,3,4]
+    population_size = 90
+    num_generations = 70
+    mutation_prob = 0.5467432719648073
+    mutation_size_1 = 0.13551215453840582
+    mutation_size_2 = 0.12234388084305348
+    generation = 0
+    tournament_size = 8
+    enemies = [2,5,6]
 
-    # run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies,True)
+    run_EA(population_size,num_generations,mutation_prob,mutation_size_1,mutation_size_2,tournament_size,enemies,False)
 
-    optuna_optimization()
+    # optuna_optimization()
 
