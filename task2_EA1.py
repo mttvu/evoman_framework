@@ -337,7 +337,7 @@ if __name__ == '__main__':
     # tournament_size = 5
     # enemies = [2,3,4]
 
-    # run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies)
+    # run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies,True)
 
     optuna_optimization()
 
