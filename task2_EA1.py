@@ -193,7 +193,7 @@ class EA(object):
                     x_new[i] = x_old[i]
                     f_new[i] = f_old[i] 
                 else:
-                    accept = 1 - np.exp(-((f_old[i] - f_children[selected_index])/abs(self.all_time_best_fitness - np.mean(f_old))))
+                    accept = np.exp((f_children[selected_index] - f_old[i])/(self.all_time_best_fitness - np.mean(f_old)))
                     u = np.random.uniform(0,1)
                     # print(f'accept: {accept}, u: {u}')
                     if accept > u:
