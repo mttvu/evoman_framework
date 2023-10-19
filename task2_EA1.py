@@ -20,6 +20,14 @@ import math
 # from optuna.study import StudyDirection
 # from optuna_dashboard import run_server
 
+
+"""
+file_to_write = open("EA1/best_enemies.txt", "w")
+
+def append_file(filestream, defeated, enemies):
+    filestream.write(f"Games won: {defeated}/8\tEnemies: {enemies}\n")
+"""
+
 class NewFitnessEnvironment(Environment):
     def fitness_single(self):
         hp = self.get_playerlife()
@@ -31,6 +39,21 @@ class NewFitnessEnvironment(Environment):
 
     def cons_multi(self, values):
         return values.mean() # - values.std()
+    
+    def multiple(self,pcont,econt):
+
+        vfitness, vplayerlife, venemylife, vtime = [],[],[],[]
+        for e in self.enemies:
+
+            fitness, playerlife, enemylife, time  = self.run_single(e,pcont,econt)
+            vfitness.append(fitness)
+            vplayerlife.append(playerlife)
+            venemylife.append(enemylife)
+            vtime.append(time)
+
+        vfitness = self.cons_multi(np.array(vfitness))
+
+        return    vfitness, vplayerlife, venemylife, vtime
 
 class Objective:
     def objective(self,env,x):
@@ -293,6 +316,51 @@ def run_EA(population_size,num_generations,mutation_prob,mutation_size_1, mutati
             f_best.append(f_best[-1])
     print("FINISHED!")
 
+    
+    def simulation(env,x):
+        f,p,e,t = env.play(pcont=x)
+        return f
+
+    test_env = NewFitnessEnvironment(
+                    experiment_name="EA1",
+                    enemies=[1,2,3,4,5,6,7,8],
+                    multiplemode="yes",
+                    playermode="ai",
+                    player_controller=player_controller(n_hidden_neurons), # you  can insert your own controller here
+                    enemymode="static",
+                    level=2,
+                    speed="fastest",
+                    visuals=False)
+    
+    with open("EA1/best.txt", "r") as ff:
+        arr = []
+        for i in range(265):
+            arr.append(np.float64(ff.readline().strip()))
+            # print(arr[i])
+
+        pcont = np.array(arr)
+        fit, player_hp, enemy_hp, t = test_env.play(pcont = pcont)
+
+    print("Gain:", sum(player_hp) - sum(enemy_hp))
+    print(f"Defeated enemies: {enemy_hp.count(0)}/8")
+    # print(f"Sum of player life: {round(sum(player_hp),0)}/800")
+    # print("Sum of time:", sum(t))
+
+
+    '''
+    with open("EA1/best.txt", "r") as ff:
+        # population = np.array([list(map(lambda num: np.float64(num), line.split())) for line in ff.read().split("\n")][0:90])
+        arr = []
+        for i in range(265):
+            arr.append(np.float64(ff.readline().strip()))
+
+        pcont = np.array(arr)
+        # index = np.argmax(np.array(list(map(lambda y: simulation(test_env, y), population))))
+        fit, player_hp, enemy_hp, t = test_env.play(pcont = pcont)
+        append_file(file_to_write, enemy_hp.count(0), enemies)
+    '''
+    
+
     if show_plot:
         plt.plot(best_f)
         plt.plot(std_f)
@@ -300,7 +368,7 @@ def run_EA(population_size,num_generations,mutation_prob,mutation_size_1, mutati
         plt.legend(["best", "std", "mean"])
         plt.xlabel("Generation")
         plt.ylabel("Fitness")
-        plt.title = f"Enemies {enemies[0]}, {enemies[1]}, {enemies[2]}"
+        plt.title = f"Enemies: {enemies}"
         plt.show()
 
     return f_best[-1]
@@ -329,6 +397,12 @@ def run_EA(population_size,num_generations,mutation_prob,mutation_size_1, mutati
 #     # run_server(storage)
 #     print("Best value: {} (params: {})\n".format(study.best_value, study.best_params))
 
+def powerset(s):
+    x = len(s)
+    masks = [1 << i for i in range(x)]
+    for i in range(1 << x):
+        yield [ss for mask, ss in zip(masks, s) if i & mask]
+
 if __name__ == '__main__':
     population_size = 90
     num_generations = 70
@@ -337,9 +411,28 @@ if __name__ == '__main__':
     mutation_size_2 = 0.12234388084305348
     generation = 0
     tournament_size = 8
-    enemies = [2,5,6]
+    enemies = [[3,6], [5,6], [2, 5, 6, 8], [2, 3, 5, 6, 8], [2, 4, 5, 6, 8]]
+    enemy_index = 1
 
-    run_EA(population_size,num_generations,mutation_prob,mutation_size_1,mutation_size_2,tournament_size,enemies,False)
+    run_EA(population_size,num_generations,mutation_prob,mutation_size_1,mutation_size_2,tournament_size,enemies[0],True)
 
+    '''
+    enemy_conf = list(powerset([2,3,4,5,6,8]))
+    enemy_conf.remove([2])
+    enemy_conf.remove([3])
+    enemy_conf.remove([4])
+    enemy_conf.remove([5])
+    enemy_conf.remove([6])
+    enemy_conf.remove([8])
+    enemy_conf.remove([])
+    # print(enemy_conf)
+
+    index = 1
+    for enemies in enemy_conf:
+        print(f"\n{index}. run / 57\tenemies: {enemies}")
+        run_EA(population_size,num_generations,mutation_prob,mutation_size_1,mutation_size_2,tournament_size,enemies,False)
+        index += 1
+    '''
     # optuna_optimization()
+# 2 4 4
 

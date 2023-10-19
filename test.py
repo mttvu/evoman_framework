@@ -63,7 +63,7 @@ class TestEnvironment(Environment):
 
 # env = TestEnvironment(
 env = NewFitnessEnvironment(
-                    experiment_name="EA1",
+                    experiment_name="EA2",
                     # enemies=[3,4,5,7],
                     enemies=[1,2,3,4,5,6,7,8],
                     multiplemode="yes",
@@ -74,10 +74,14 @@ env = NewFitnessEnvironment(
                     speed="fastest",
                     visuals=False)
 
-with open("EA1/best.txt", "r") as ff:
-    population = np.array([list(map(lambda num: np.float64(num), line.split())) for line in ff.read().split("\n")][0:40])
-    index = np.argmax(np.array(list(map(lambda y: simulation(env, y), population))))
-    f, player_hp, enemy_hp, t = env.play(pcont = population[index])
+with open("EA2/best.txt", "r") as ff:
+    arr = []
+    for i in range(265):
+        arr.append(np.float64(ff.readline().strip()))
+        # print(arr[i])
+
+    pcont = np.array(arr)
+    f, player_hp, enemy_hp, t = env.play(pcont = pcont)
     print(f)    
     print(player_hp)
     print(enemy_hp)
