@@ -26,7 +26,7 @@ class NewFitnessEnvironment(Environment):
         return (a*hp + b*(100-enemy))/(a+b)
 
     def cons_multi(self, values):
-        return values.mean() # - values.std()
+        return values.mean()
 
 class Objective:
     def objective(self,env,x):
@@ -78,19 +78,6 @@ class EA(object):
             parents_idx = np.random.choice(parent_size, 2, replace=False)
             parent1 = x_parents[parents_idx[0]]
             parent2 = x_parents[parents_idx[1]]
-            # # generate a random binary mask for crossover
-            # mask = np.random.randint(0, 2, len(parent1)).astype(bool)
-            # # create a child with the first part from parent1 and the second part from parent2
-            # child = np.zeros_like(parent1)
-            # child[mask] = parent1[mask]
-            # child[~mask] = parent2[~mask]
-
-            # # create second child with the inverted mask
-            # child2 = np.zeros_like(parent1)
-            # child2[~mask] = parent1[~mask]
-            # child2[mask] = parent2[mask]
-            # x_children.append(child)
-            # x_children.append(child2)
 
             child = np.zeros_like(parent1)
             child2 = np.zeros_like(parent1)
@@ -143,9 +130,6 @@ class EA(object):
     def survivor_selection(self, x_old, x_children, f_old, f_children):
         n_children = len(x_children)
 
-        # x_combined = np.concatenate((x_old, x_children))
-        # f_combined = np.concatenate((f_old, f_children))
-
         x_new = np.empty_like(x_old)
         f_new = np.empty_like(f_old)
 
@@ -194,7 +178,6 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
     n_hidden_neurons = 10
 
     # initializes simulation in individual evolution mode, for single static enemy.
-    # env = Environment(
     env = NewFitnessEnvironment(
                     experiment_name=experiment_name,
                     enemies=enemies,
@@ -267,25 +250,14 @@ def run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies
             f_best.append(f_best[-1])
     print("FINISHED!")
 
-    # plot the best, st and mean
-    plt.plot(best_f)
-    plt.plot(std_f)
-    plt.plot(mean_f)
-    plt.legend(["best", "std", "mean"])
-    plt.xlabel("Generation")
-    plt.ylabel("Fitness")
-    plt.title(f"Generalist: Fitness over enemies {enemies[0]}, {enemies[1]}")
-    # plt.title(f"Generalist: Fitness over enemies {enemies[0]}, {enemies[1]} and {enemies[2]}")
-    plt.show()
-
 if __name__ == '__main__':
-    population_size = 30
-    num_generations = 30
-    mutation_prob = 0.01
-    mutation_size_1 = 0.2
-    mutation_size_2 = 0.05 
-    generation = 0 
-    tournament_size = 5
-    enemies = [3,4,5,7]
+    population_size = 90
+    num_generations = 70
+    mutation_prob = 0.5467432719648073
+    mutation_size_1 = 0.13551215453840582
+    mutation_size_2 = 0.12234388084305348
+    generation = 0
+    tournament_size = 8
+    enemies = [3,6,8]
 
     run_EA(population_size,num_generations,mutation_prob,tournament_size,enemies)

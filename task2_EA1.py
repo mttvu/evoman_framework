@@ -16,9 +16,6 @@ from demo_controller import player_controller
 import numpy as np
 import os
 import math
-# import optuna
-# from optuna.study import StudyDirection
-# from optuna_dashboard import run_server
 
 class NewFitnessEnvironment(Environment):
     def fitness_single(self):
@@ -91,19 +88,6 @@ class EA(object):
 
             parent1 = x_parents[parents_idx[0]]
             parent2 = x_parents[parents_idx[1]]
-            # generate a random binary mask for crossover
-            # mask = np.random.randint(0, 2, len(parent1)).astype(bool)
-            # create a child with the first part from parent1 and the second part from parent2
-            # child = np.zeros_like(parent1)
-            # child[mask] = parent1[mask]
-            # child[~mask] = parent2[~mask]
-
-            # # create second child with the inverted mask
-            # child2 = np.zeros_like(parent1)
-            # child2[~mask] = parent1[~mask]
-            # child2[mask] = parent2[mask]
-            # x_children.append(child)
-            # x_children.append(child2)
 
             child = np.zeros_like(parent1)
             child2 = np.zeros_like(parent1)
@@ -164,8 +148,6 @@ class EA(object):
                 x_new[i] = x_children[selected_index]
                 f_new[i] = f_children[selected_index]
             else:
-                # always keep individual with largest fitness
-                # or we could keep track of the highest achieved fitness
                 if i == np.argmax(f_old):
                     x_new[i] = x_old[i]
                     f_new[i] = f_old[i] 
@@ -203,7 +185,7 @@ class EA(object):
 
         return x, f
 
-def run_EA(population_size,num_generations,mutation_prob,mutation_size_1, mutation_size_2,tournament_size,enemies, show_plot=True):
+def run_EA(population_size,num_generations,mutation_prob,mutation_size_1, mutation_size_2,tournament_size,enemies):
     # choose this for not using visuals and thus making experiments faster
     headless = True
     if headless:
@@ -216,7 +198,6 @@ def run_EA(population_size,num_generations,mutation_prob,mutation_size_1, mutati
     n_hidden_neurons = 10
 
     # initializes simulation in individual evolution mode, for single static enemy.
-    # env = Environment(
     env = NewFitnessEnvironment(
                     experiment_name=experiment_name,
                     enemies=enemies,
@@ -293,42 +274,6 @@ def run_EA(population_size,num_generations,mutation_prob,mutation_size_1, mutati
             f_best.append(f_best[-1])
     print("FINISHED!")
 
-    if show_plot:
-        plt.plot(best_f)
-        plt.plot(std_f)
-        plt.plot(mean_f)
-        plt.legend(["best", "std", "mean"])
-        plt.xlabel("Generation")
-        plt.ylabel("Fitness")
-        plt.title = f"Enemies {enemies[0]}, {enemies[1]}, {enemies[2]}"
-        plt.show()
-
-    return f_best[-1]
-
-# def optuna_objective(trial):
-#     population_size = trial.suggest_int("population_size", 20, 150)
-#     num_generations = trial.suggest_int("num_generations", 10, 150)
-#     mutation_prob = trial.suggest_float("mutation_prob", 0, 1)
-#     mutation_size_1 = trial.suggest_float("mutation_size_1", 0, 1)
-#     mutation_size_2 = trial.suggest_float("mutation_size_2", 0, 1)
-#     tournament_size = trial.suggest_int("tournament_size", 2, 20)
-#     enemies = [2,5,6]
-#     print(f'population_size: {population_size}')
-#     print(f'num_generations: {num_generations}')
-#     print(f'mutation_prob: {mutation_prob}')
-#     print(f'mutation_size_1: {mutation_size_1}')
-#     print(f'mutation_size_2: {mutation_size_2}')
-#     print(f'tournament_size: {tournament_size}')
-#     return run_EA(population_size,num_generations,mutation_prob, mutation_size_1,mutation_size_2,tournament_size,enemies)
-
-# def optuna_optimization():
-#     # storage = optuna.storages.InMemoryStorage()
-#     storage = 'sqlite:///C:/Users/thaom/Documents/School/VU/master/evolutionary computing/optuna/db.db'
-#     study = optuna.create_study(direction=StudyDirection.MAXIMIZE,storage=storage)
-#     study.optimize(optuna_objective, n_trials=100)
-#     # run_server(storage)
-#     print("Best value: {} (params: {})\n".format(study.best_value, study.best_params))
-
 if __name__ == '__main__':
     population_size = 90
     num_generations = 70
@@ -337,9 +282,6 @@ if __name__ == '__main__':
     mutation_size_2 = 0.12234388084305348
     generation = 0
     tournament_size = 8
-    enemies = [2,5,6]
+    enemies = [3,6,8]
 
-    run_EA(population_size,num_generations,mutation_prob,mutation_size_1,mutation_size_2,tournament_size,enemies,False)
-
-    # optuna_optimization()
-
+    run_EA(population_size,num_generations,mutation_prob,mutation_size_1,mutation_size_2,tournament_size,enemies)
